@@ -1,0 +1,25 @@
+# Gradle / Android build output
+.gradle/
+.kotlin/
+build/
+app/build/
+.externalNativeBuild/
+.cxx/
+captures/
+
+# Local machine configuration
+local.properties
+
+# Android Studio / IntelliJ local state
+*.iml
+.idea/
+
+# Secrets and app-private service config
+app/google-services.json
+*.jks
+*.keystore
+keystore.properties
+
+# OS files
+.DS_Store
+Thumbs.db
