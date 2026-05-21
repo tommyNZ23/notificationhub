@@ -25,11 +25,15 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberSwipeToDismissBoxState
@@ -64,6 +68,7 @@ import java.util.Date
 
 private val TigerOrange = Color(0xFFF47A20)
 private val TigerBlack = Color(0xFF17120E)
+private const val DismissThresholdFraction = 0.75f
 
 class MainActivity : ComponentActivity() {
 
@@ -178,6 +183,7 @@ fun NotificationInboxApp() {
     val context = LocalContext.current
     val mainHandler = remember { Handler(Looper.getMainLooper()) }
     var messages by remember { mutableStateOf(NotificationMessageStore.getMessages(context)) }
+    var showClearAllDialog by remember { mutableStateOf(false) }
 
     DisposableEffect(context) {
         val listener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, _ ->
@@ -212,7 +218,18 @@ fun NotificationInboxApp() {
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background,
                     titleContentColor = TigerBlack
-                )
+                ),
+                actions = {
+                    if (messages.isNotEmpty()) {
+                        IconButton(onClick = { showClearAllDialog = true }) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_delete_24),
+                                contentDescription = "Clear all messages",
+                                tint = TigerBlack
+                            )
+                        }
+                    }
+                }
             )
         }
     ) { innerPadding ->
@@ -225,6 +242,30 @@ fun NotificationInboxApp() {
             modifier = Modifier.padding(innerPadding)
         )
     }
+
+    if (showClearAllDialog) {
+        AlertDialog(
+            onDismissRequest = { showClearAllDialog = false },
+            title = { Text("Clear all messages?") },
+            text = { Text("This will permanently remove every saved message.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        NotificationMessageStore.clearMessages(context)
+                        messages = emptyList()
+                        showClearAllDialog = false
+                    }
+                ) {
+                    Text("Clear all", color = TigerOrange)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearAllDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 }
 
 @Composable
@@ -234,16 +275,22 @@ fun NotificationInboxScreen(
     modifier: Modifier = Modifier
 ) {
     if (messages.isEmpty()) {
-        Box(
+        Column(
             modifier = modifier
                 .fillMaxSize()
                 .padding(24.dp),
-            contentAlignment = Alignment.Center
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
+            Image(
+                painter = painterResource(R.mipmap.ic_launcher_notificationhub_foreground),
+                contentDescription = "NotificationHub logo",
+                modifier = Modifier.size(80.dp)
+            )
             Text(
-                text = "No messages yet",
+                text = "You're all caught up",
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = TigerBlack
             )
         }
         return
@@ -278,7 +325,8 @@ fun NotificationMessageRow(
             } else {
                 false
             }
-        }
+        },
+        positionalThreshold = { totalDistance -> totalDistance * DismissThresholdFraction }
     )
 
     SwipeToDismissBox(
@@ -315,7 +363,9 @@ fun NotificationMessageRow(
                         .background(TigerOrange)
                 )
                 Column(
-                    modifier = Modifier.padding(16.dp),
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Text(
@@ -328,13 +378,28 @@ fun NotificationMessageRow(
                         style = MaterialTheme.typography.titleMedium,
                         color = TigerBlack
                     )
-                    Text(
-                        text = message.body,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    MessageBody(message.body)
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun MessageBody(body: String) {
+    val lines = body
+        .lineSequence()
+        .map { it.trim() }
+        .filter { it.isNotEmpty() }
+        .toList()
+
+    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+        lines.forEach { line ->
+            Text(
+                text = line,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
@@ -347,14 +412,14 @@ private val previewMessages = listOf(
     NotificationMessage(
         id = "1",
         receivedAtMillis = 1_767_213_600_000,
-        title = "BodyGood New booking",
-        body = "New booking: BodyGood - Alex Morgan - Thu 21 May 2026 9:30AM - Massage"
+        title = "New Booking: BodyGood",
+        body = "Alex Morgan\nThu 21 May 2026 9:30AM\nMassage"
     ),
     NotificationMessage(
         id = "2",
         receivedAtMillis = 1_767_210_000_000,
-        title = "BodyGood Booking moved",
-        body = "Booking moved: BodyGood - Jamie Lee - Thu 21 May 2026 1:15PM"
+        title = "Booking Moved: BodyGood",
+        body = "Jamie Lee\nThu 21 May 2026 1:15PM\nPhysiotherapy"
     )
 )
 
