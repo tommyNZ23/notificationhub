@@ -34,6 +34,10 @@ object NotificationMessageStore {
         saveMessages(context, messages)
     }
 
+    fun clearMessages(context: Context) {
+        saveMessages(context, emptyList())
+    }
+
     fun getMessages(context: Context): List<NotificationMessage> {
         val raw = prefs(context).getString(KEY_MESSAGES, "[]") ?: "[]"
         val array = runCatching { JSONArray(raw) }.getOrDefault(JSONArray())
