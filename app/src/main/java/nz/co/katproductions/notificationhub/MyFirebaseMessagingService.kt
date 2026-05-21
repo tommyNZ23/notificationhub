@@ -32,6 +32,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             ?: remoteMessage.data["body"]
             ?: "You have a new message"
 
+        NotificationMessageStore.addMessage(this, title, body)
         showNotification(title, body)
     }
 
