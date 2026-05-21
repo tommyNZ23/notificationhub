@@ -23,17 +23,9 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import nz.co.katproductions.notificationhub.BuildConfig
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
-import org.json.JSONObject
-import kotlin.concurrent.thread
 
 
 class MainActivity : ComponentActivity() {
-
-    private val http = OkHttpClient()
 
     // -----------------------------------------
     // GOOGLE SIGN-IN SETUP
@@ -72,45 +64,18 @@ class MainActivity : ComponentActivity() {
                         val fcmToken = taskToken.result
                         Log.d("MainActivity", "FCM token = $fcmToken")
 
-                        // TODO: send idToken + fcmToken to your backend /registerDevice
-                        registerDeviceWithBackend(idToken, fcmToken)
+                        NotificationHubRegistration.registerDeviceWithBackend(
+                            this,
+                            idToken,
+                            email,
+                            fcmToken
+                        )
                     }
 
             } catch (e: ApiException) {
                 Log.e("MainActivity", "Google sign-in failed", e)
             }
         }
-
-
-    private fun registerDeviceWithBackend(idToken: String, fcmToken: String) {
-        val url = "${BuildConfig.API_BASE_URL}/register-device"
-
-        val json = JSONObject()
-            .put("idToken", idToken)
-            .put("deviceToken", fcmToken)
-            .toString()
-
-        val body = json.toRequestBody("application/json; charset=utf-8".toMediaType())
-
-        val request = Request.Builder()
-            .url(url)
-            .post(body)
-            .addHeader("Content-Type", "application/json")
-            .addHeader("x-notificationhub-secret", BuildConfig.NOTIFICATION_HUB_SHARED_SECRET)
-            .build()
-
-        thread {
-            try {
-                http.newCall(request).execute().use { resp ->
-                    val respText = resp.body?.string()
-                    Log.d("MainActivity", "register-device HTTP ${resp.code} body=$respText")
-                }
-            } catch (e: Exception) {
-                Log.e("MainActivity", "register-device call failed", e)
-            }
-        }
-    }
-
 
 
     // 2. Build the Google Sign-In client
@@ -187,5 +152,3 @@ fun GreetingPreview() {
         Greeting("Pickle")
     }
 }
-
-
