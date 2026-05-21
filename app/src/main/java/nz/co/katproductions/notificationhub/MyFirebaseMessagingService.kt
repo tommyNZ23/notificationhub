@@ -1,23 +1,22 @@
 package nz.co.katproductions.notificationhub
 
-import android.util.Log
-import com.google.firebase.messaging.FirebaseMessagingService
-import com.google.firebase.messaging.RemoteMessage
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.util.Log
 import androidx.core.app.NotificationCompat
-
+import com.google.firebase.messaging.FirebaseMessagingService
+import com.google.firebase.messaging.RemoteMessage
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         Log.d(TAG, "New FCM token from onNewToken: $token")
-        // TODO: later – send this token to your AWS backend for SNS
+        NotificationHubRegistration.updateDeviceTokenIfPossible(this, token)
     }
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
@@ -25,7 +24,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
         Log.d(TAG, "Message received: $remoteMessage")
 
-        // Prefer the "notification" part, fall back to data
         val title = remoteMessage.notification?.title
             ?: remoteMessage.data["title"]
             ?: "NotificationHub"
@@ -37,12 +35,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         showNotification(title, body)
     }
 
-
-    companion object {
-        private const val TAG = "MyFcmService"
-    }
-
-
     private fun showNotification(title: String, body: String) {
         val channelId = "notificationhub_default_channel"
         val channelName = "NotificationHub"
@@ -51,7 +43,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         val notificationManager =
             getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        // Create the channel on Android 8+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 channelId,
@@ -63,7 +54,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             notificationManager.createNotificationChannel(channel)
         }
 
-        // Tap takes you back to MainActivity
         val intent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
@@ -87,4 +77,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         notificationManager.notify(notificationId, notification)
     }
 
+    companion object {
+        private const val TAG = "MyFcmService"
+    }
 }

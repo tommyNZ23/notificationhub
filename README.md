@@ -44,3 +44,7 @@ The following files are intentionally not tracked:
 - keystores and signing config
 
 Use environment variables `NOTIFICATION_HUB_API_BASE_URL` and `NOTIFICATION_HUB_SHARED_SECRET` in CI if you build outside Android Studio.
+
+## FCM Token Refresh
+
+After the user signs in successfully, the app stores the registered email locally. If Firebase later issues a new FCM token, `MyFirebaseMessagingService.onNewToken()` calls the backend `/update-device-token` route with that email and the new token so the SNS endpoint can be repaired without opening the app.
