@@ -67,7 +67,6 @@ import java.text.DateFormat
 import java.util.Date
 
 private val TigerOrange = Color(0xFFF47A20)
-private val TigerBlack = Color(0xFF17120E)
 private const val DismissThresholdFraction = 0.75f
 
 class MainActivity : ComponentActivity() {
@@ -217,7 +216,7 @@ fun NotificationInboxApp() {
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background,
-                    titleContentColor = TigerBlack
+                    titleContentColor = MaterialTheme.colorScheme.onBackground
                 ),
                 actions = {
                     if (messages.isNotEmpty()) {
@@ -225,7 +224,7 @@ fun NotificationInboxApp() {
                             Icon(
                                 painter = painterResource(R.drawable.ic_delete_24),
                                 contentDescription = "Clear all messages",
-                                tint = TigerBlack
+                                tint = MaterialTheme.colorScheme.onBackground
                             )
                         }
                     }
@@ -290,7 +289,7 @@ fun NotificationInboxScreen(
             Text(
                 text = "You're all caught up",
                 style = MaterialTheme.typography.titleMedium,
-                color = TigerBlack
+                color = MaterialTheme.colorScheme.onBackground
             )
         }
         return
@@ -342,7 +341,7 @@ fun NotificationMessageRow(
             ) {
                 Text(
                     text = "Clear",
-                    color = TigerBlack,
+                    color = MaterialTheme.colorScheme.onPrimary,
                     style = MaterialTheme.typography.labelLarge
                 )
             }
@@ -376,7 +375,7 @@ fun NotificationMessageRow(
                     Text(
                         text = message.title,
                         style = MaterialTheme.typography.titleMedium,
-                        color = TigerBlack
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     MessageBody(message.body)
                 }
